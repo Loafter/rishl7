@@ -1,28 +1,54 @@
 package main
 
-import "net"
+import (
+	"io/ioutil"
+	"net"
+)
 import "strconv"
 import "encoding/base64"
+import "log"
 
-const adt01Smp = "XCZ8QWNjTWdyfDF8fHwyMDEyMDEyMzQ5NTEyM3x8QURUXkEwMXw1OTkxMDJ8UHwyLjN8fHwNCkVWTnxBMDF8MjAwNTAxMTAwNDU1MDJ8fHx8fCANClBJRHwxfHwxMDAwNjU3OV5eXjFeTVJOXjF8fERPRV5KT0hOXlF8fDE5MjQxMjM0fE18fDF8MTIzIE1BSU4gU1ReXlNPTUVXSEVSRV5DVF45OTk5OTAwMDBeXk18MXw4ODg1NTUxMjEyfDg4ODU1NTEyMTJ8MXwyfHw0MDAwNzcxNl5eXkFjY01ncl5WTl4xfDEyMzEyMTIzNHx8fHx8fHx8fHx8Tk8gTksxfDF8RFVDS15IVUVZfFNPfDM1ODMgRFVDSyBSRF5eU09NRVdIRVJFXkNUXjk5OTk5MDAwMHw4ODg1NTUyMjIyfHxZfHx8fHx8fHx8fHx8fHwgDQpQVjF8MXxJfFBSRU9QXjEwMV4xXjFeXl5TfDN8fHwzN15TTUlUSF5KT0VeUV5eXl5eXkFjY01ncl5eXl5DSXx8fDAxfHx8fDF8fHwzN15TTUlUSF5KT0VeUV5eXl5eXkFjY01ncl5eXl5DSXwyfDQwMDA3NzE2Xl5eQWNjTWdyXlZOfDR8fHx8fHx8fHx8fHx8fHx8fHx8MXx8R3x8fDIwMDUwMTEwMDQ1MjUzfHx8fHx8DQpHVDF8MXw4MjkxfERPRV5KT0hOXlF8fDExMV5NQUlOIFNUXl5TT01FV0hFUkVeQ1ReOTk5OTkwMDAwfDg4ODU1NTEyMTJ8fDE5MjQxMjM0fE18fDF8MTIzMTIxMjM0fHx8fCNNeUNvbXBhbnkgTExDfDExMV5NQUlOIFNUXl5TT01FV0hFUkVeQ1ReOTk5OTkwMDAwfDg4ODU1NTEyMTJ8fFBUfA0KREcxfDF8STl8NzE1OTZeT1NURU9BUlRIUk9TIE5PUy1ML0xFRyBeSTl8T1NURU9BUlRIUk9TIE5PUy1ML0xFRyB8fEF8DQpJTjF8MXxNRURJQ0FSRXwzfE1FRElDQVJFfHx8fHx8fE15Q29tcGFueSBMTEN8MTk4OTEwMDF8fHw0fERPRV5KT0hOXlF8MXwxOTI0MTIzNHwxMTFeTUFJTiBTVF5eU09NRVdIRVJFXkNUXjk5OTk5MDAwMHx8fHx8fHx8fHx8fHx8fHx8MTIzMTIxMjM0QXx8fHx8fFBUfE18MTIzIE1BSU4gU1ReXlNPTUVXSEVSRV5DVF45OTk5OTAwMDB8fHx8fDgyOTENCklOMnwxfHwxMjMxMjEyMzR8TXlDb21wYW55IExMQ3x8fDEyMzEyMTIzNEF8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHw4ODg1NTUxMjEyDQpJTjF8MnxOT04tUFJJTUFSWXw5fE1FRElDQUwgTVVUVUFMIENBTElGLnxQTyBCT1ggOTQ3NzZeXlNNQUxMVklMTEVeS1NeNDQxNDE0Nzc2fHw4MDAzNjIxMjc5fFBVQlNVTUJ8fHxNeUNvbXBhbnkgTExDfHx8fDd8RE9FXkpPSE5eUXwxfDE5MjQxMjM0fDEyMyBNQUlOIFNUXl5TT01FV0hFUkVeQ1ReOTk5OTkwMDAwfHx8fHx8fHx8fHx8fHx8fHwwNTYyNjk3NzB8fHx8fHxQVHxNfDExMV5NQUlOIFNUXl5TT01FV0hFUkVeQ1ReOTk5OTkwMDAwfHx8fHw4MjkxDQpJTjJ8Mnx8MTIzMTIxMjM0fE15Q29tcGFueSBMTEN8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHw4ODg1NTUxMjEyDQpJTjF8M3xTRUxGIFBBWXwxfFNFTEYgUEFZfHx8fHx8fHx8fHw1fHwx"
+const adt01Smp = "TVNIfF5+XCZ8RVBJQ0FEVHxESHxMQUJBRFR8REh8MjAxMzAxMDExMjI2fHxBRFReQTAxfEhMN01TRzAwMDAxfFB8Mi4zfA0KRVZOfEEwMXwyMDEzMDEwMTEyMjN8fA0KUElEfHx8TVJOMTIzNDVeNV5NMTF8fEFQUExFU0VFRF5KT0hOXkFeSUlJfHwxOTcxMDEwMXxNfHxDfDEgQ0FUQUxZWkUgU1RSRUVUXl5NQURJU09OXldJXjUzMDA1LTEwMjB8R0x8KDQxNCkzNzktMTIxMnwoNDE0KTI3MS0zNDM0fHxTfHxNUk4xMjM0NTAwMV4yXk0xMHwxMjM0NTY3ODl8OTg3NjU0Xk5DfA0KTksxfDF8QVBQTEVTRUVEXkJBUkJBUkFeSnxXSUZFfHx8fHx8TkteTkVYVCBPRiBLSU4NClBWMXwxfEl8MjAwMF4yMDEyXjAxfHx8fDAwNDc3N15HT09EXlNJRE5FWV5KLnx8fFNVUnx8fHxBRE18QTB8DQo="
 
 type HL7Client struct {
 }
 
-func (dc *HL7Client) ADTA01(pd PatientData, ip string, port int) error {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", ip+strconv.Itoa(port))
+func (dc *HL7Client) ADTA01(pd PatientData, hl7cd Hl7ConD) ([]byte, error) {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", hl7cd.SerIp+":"+strconv.Itoa(hl7cd.Port))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+
+	}()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	data, _ := base64.StdEncoding.DecodeString(adt01Smp)
-	_, err = conn.Write(data)
-	if err != nil {
-		return err
+	ending := []byte{0x0d, 0x1c, 0x0d}
+	start := []byte{0x0b}
+	data = append(data[:len(data)-3], ending...)
+	data = append(start[:], data[:]...)
+	log.Println(data)
+
+	if _, err = conn.Write(data); err != nil {
+		return nil, err
 	}
-	return nil
+
+	if err := conn.CloseWrite(); err != nil {
+		return nil, err
+	}
+
+	redat, err := ioutil.ReadAll(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(redat)
+	return redat, nil
 }
