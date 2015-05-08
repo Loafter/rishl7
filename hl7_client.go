@@ -1,19 +1,16 @@
 package main
 
-import (
-	"io/ioutil"
-	"net"
-)
+import "net"
+import "io/ioutil"
 import "strconv"
-import "encoding/base64"
 import "log"
 
-const adt01Smp = "TVNIfF5+XCZ8RVBJQ0FEVHxESHxMQUJBRFR8REh8MjAxMzAxMDExMjI2fHxBRFReQTAxfEhMN01TRzAwMDAxfFB8Mi4zfA0KRVZOfEEwMXwyMDEzMDEwMTEyMjN8fA0KUElEfHx8TVJOMTIzNDVeNV5NMTF8fEFQUExFU0VFRF5KT0hOXkFeSUlJfHwxOTcxMDEwMXxNfHxDfDEgQ0FUQUxZWkUgU1RSRUVUXl5NQURJU09OXldJXjUzMDA1LTEwMjB8R0x8KDQxNCkzNzktMTIxMnwoNDE0KTI3MS0zNDM0fHxTfHxNUk4xMjM0NTAwMV4yXk0xMHwxMjM0NTY3ODl8OTg3NjU0Xk5DfA0KTksxfDF8QVBQTEVTRUVEXkJBUkJBUkFeSnxXSUZFfHx8fHx8TkteTkVYVCBPRiBLSU4NClBWMXwxfEl8MjAwMF4yMDEyXjAxfHx8fDAwNDc3N15HT09EXlNJRE5FWV5KLnx8fFNVUnx8fHxBRE18QTB8DQo="
+const adt01Smp = "TVNIfF5+XCZ8QUtHVU5ISVN8UkFEWU9MT0rEsHxHRV9SSVN8fDIwMTUwNDI4MTA0MjQ0fHxPUk1eTzAxfDF8UHwyLjN8fHx8fHx8DQpFVk58TzAxfDIwMTUwNDI4DQpQSUR8fHxMMDQzNzk0MV5eXkhCWVN8fEtVUlRVTFVTXlRBTElQfHwxOTM3MDQyMHxNfHx8Xl5efHx8fHx8fHxLVVJVTV9LT0RVfHx8fHx8fHx8fHwNClBWMXx8T3x8fHx8fHx8fHx8fHx8fHx8QTE1MDM0NDY0MHxLVVJVTV9LT0RVXkdUQVJJSHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHxWfA0KT1JDfE5XfDI2NzI0NDk3fHx8U0N8fDIwMTUwNDI4MTA0MjQ0fHwyMDE1MDQyODEwNDI0NHxeXnx8Xl58fHx8fHx8DQpPQlJ8MXwyNjcyNDQ5N3x8ODAwMDFeQWtjacSfZXIgZ3JhZmlzaSBQLkEuICh0ZWsgecO2bikgLSBBcmthIMOWbl58fHwyMDE1MDQyODEwNDI0NHx8fHx8fHx8fHx8fHx8fHx8Q1J8fHxeXl5eXnx8fHx8fHx8fHx8fHx8fHx8Xl58IA0K"
 
 type HL7Client struct {
 }
 
-func (dc *HL7Client) ADTA01(pd PatientData, hl7cd Hl7ConD) ([]byte, error) {
+func (dc *HL7Client) SendHL7Data(data []byte, hl7cd Hl7ConD) ([]byte, error) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", hl7cd.SerIp+":"+strconv.Itoa(hl7cd.Port))
 	if err != nil {
 		return nil, err
@@ -26,15 +23,16 @@ func (dc *HL7Client) ADTA01(pd PatientData, hl7cd Hl7ConD) ([]byte, error) {
 		}
 
 	}()
+
 	if err != nil {
 		return nil, err
 	}
-	data, _ := base64.StdEncoding.DecodeString(adt01Smp)
+
 	ending := []byte{0x0d, 0x1c, 0x0d}
 	start := []byte{0x0b}
 	data = append(data[:len(data)-3], ending...)
 	data = append(start[:], data[:]...)
-	log.Println(data)
+	log.Println(string(data[:]))
 
 	if _, err = conn.Write(data); err != nil {
 		return nil, err
@@ -49,6 +47,6 @@ func (dc *HL7Client) ADTA01(pd PatientData, hl7cd Hl7ConD) ([]byte, error) {
 		return nil, err
 	}
 
-	log.Println(redat)
+	log.Println(string(redat[:]))
 	return redat, nil
 }
