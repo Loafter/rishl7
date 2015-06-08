@@ -1,4 +1,4 @@
-package main
+package rishl7
 
 import "net/http"
 import "strconv"

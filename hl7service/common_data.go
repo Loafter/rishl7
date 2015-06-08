@@ -1,4 +1,4 @@
-package main
+package rishl7
 
 type Hl7ConD struct {
 	SerIp string
